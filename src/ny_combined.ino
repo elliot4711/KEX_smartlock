@@ -109,7 +109,7 @@ void loop() {
 
 
     if (shouldTurn == true && turnRight == true){
-      myservo.write(2);
+      myservo.write(4);
     }
   
       
