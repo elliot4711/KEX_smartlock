@@ -18,6 +18,7 @@ int x, y, z, a, b;
 char myArray[3];
 int buttonValue;
 int timeOnStopTurn = 0;
+bool beenInStop = false;
 
 Servo myservo;
 
@@ -110,7 +111,7 @@ void loop() {
 
 
     if (shouldTurn == true && turnRight == true){
-      myservo.write(40);
+      myservo.write(43);
     }
   
       
@@ -118,13 +119,26 @@ void loop() {
       myservo.write(110);
     }
   
-    if (abs(result) <= 10) {
+    if (abs(result) <= 5) {
       timeOnStopTurn = millis();
-      if ((timeOnStopTurn - timeOnDoorChange) > 1000) {
-        Serial.println("shouldTurn False");
-        myservo.write(90);
-        shouldTurn = false;
+      if ((timeOnStopTurn - timeOnDoorChange) > 2000) {
+        if (beenInStop == true){
+          Serial.println("shouldTurn False");
+          Serial.println();
+          Serial.print("stop turning triggered at: ");
+          Serial.print(timeOnStopTurn - timeOnDoorChange);
+          myservo.write(90);
+          shouldTurn = false;
+        }
+        else{
+          delay(50);
+          beenInStop = true;
+        }
+        
       }
+    }
+    else {
+      beenInStop = false;
     }
   
     if (z >=2000) {
