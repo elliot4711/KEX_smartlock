@@ -1,3 +1,15 @@
+/* Main code for Smart door lock, a proof of concept for a
+smart door lock for appartments built as a Bachelor’s Degree Project at KTH.
+Authors: Elliot Stjernqvist, Sebastian Kristoffersson
+Date: 240412
+Course: MF133X Bachelor’s Degree Thesis Project
+in Mechatronics
+*/
+
+#define BLYNK_TEMPLATE_ID "TMPL4g2p030XV"
+#define BLYNK_TEMPLATE_NAME "Door lock"
+#define BLYNK_AUTH_TOKEN "Tp2CGpcNlmvGuREtfX8FS47WhoxA_dij"
+
 #include <Adafruit_SSD1306.h>
 #include <splash.h>
 
@@ -7,13 +19,24 @@
 #include <Adafruit_SPITFT.h>
 #include <Adafruit_SPITFT_Macros.h>
 
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
 #include <QMC5883LCompass.h>
 #include <Servo.h>
 #include <Wire.h>
 
+/* Comment this out to disable prints and save space */
+#define BLYNK_PRINT Serial
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+char ssid[] = "Illuminati";
+char pass[] = "newWORLDorder";
+
+BlynkTimer timer;
+
 
 // 'lock closed', 128x64px
 const unsigned char epd_bitmap_lock_closed [] PROGMEM = {
@@ -174,8 +197,22 @@ char myArray[3];
 int buttonValue;
 int timeOnStopTurn = 0;
 int oldValue = 0;
+String doorState = "Placeholder";
+int IOTbutton = 0;
 
 Servo myservo;
+
+BLYNK_WRITE(V0)
+{   
+  IOTbutton = param.asInt(); // Get value as integer
+}
+
+void myTimerEvent()
+{
+  // You can send any value at any time.
+  // Please don't send more that 10 values per second.
+  Blynk.virtualWrite(V4, doorState);
+}
 
 void setup() {
   Serial.begin(115200);
@@ -189,6 +226,11 @@ void setup() {
     for(;;);
   }
 
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+
+  // Setup a function to be called every second
+  timer.setInterval(500L, myTimerEvent);
+
   average = 0.0;
   for( int i=0; i<10; i++)
   {
@@ -200,6 +242,8 @@ void setup() {
 }
 
 void loop() {
+  Blynk.run();
+  timer.run();
   progTime = millis();
 
   if ((progTime - loopTime) > 2){
@@ -254,7 +298,7 @@ void loop() {
 
     buttonValue = analogRead(BUTTON_PIN);
 
-    if (buttonValue > 1010 && turnRight == false){
+    if ((buttonValue > 1010 && turnRight == false) || (IOTbutton == 1 && turnRight == false)){
       if ((progTime - timeOnDoorChange) > 2500) {
         Serial.println("Locking door");
         turnRight = true;
@@ -263,7 +307,7 @@ void loop() {
         timeOnDoorChange = millis();
       }
     }
-    else if (buttonValue > 1010 && turnRight == true){
+    else if ((buttonValue > 1010 && turnRight == true) || (IOTbutton == 1 && turnRight == true)){
       if ((progTime - timeOnDoorChange) > 2500) {
         Serial.println("Unlocking door");
         turnRight = false;
@@ -304,12 +348,14 @@ void loop() {
     }
 
     if (z >= -2200) {
-      Serial.println("Door open");
+      doorState = String("Door open");
+      Serial.println(doorState);
       display.drawBitmap(0, 0, epd_bitmap_lock_open, 128, 64, WHITE);
       display.display(); 
     }
     else {
-      Serial.println("Door closed");
+      doorState = String("Door closed");
+      Serial.println(doorState);
       display.drawBitmap(0, 0, epd_bitmap_lock_closed, 128, 64, WHITE);
       display.display(); 
     }
