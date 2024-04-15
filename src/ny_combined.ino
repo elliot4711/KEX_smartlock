@@ -32,8 +32,8 @@ in Mechatronics
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
-char ssid[] = "Illuminati";
-char pass[] = "newWORLDorder";
+char ssid[] = "";
+char pass[] = "";
 
 BlynkTimer timer;
 
