@@ -32,8 +32,8 @@ in Mechatronics
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
-char ssid[] = "";
-char pass[] = "";
+char ssid[] = "Placeholder WiFi name";
+char pass[] = "Placeholder WiFi password";
 
 BlynkTimer timer;
 
@@ -197,7 +197,7 @@ char myArray[3];
 int buttonValue;
 int timeOnStopTurn = 0;
 int oldValue = 0;
-String doorState = "Placeholder";
+String lockState = "Placeholder";
 int IOTbutton = 0;
 
 Servo myservo;
@@ -211,7 +211,7 @@ void myTimerEvent()
 {
   // You can send any value at any time.
   // Please don't send more that 10 values per second.
-  Blynk.virtualWrite(V4, doorState);
+  Blynk.virtualWrite(V4, lockState);
 }
 
 void setup() {
@@ -226,7 +226,25 @@ void setup() {
     for(;;);
   }
 
+  display.clearDisplay();
+
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.println("Please wait for internet connection");
+  display.display(); 
+
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+
+  display.clearDisplay();
+
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.println("Internet connection established!");
+  display.display(); 
+
+  delay(500);
 
   // Setup a function to be called every second
   timer.setInterval(500L, myTimerEvent);
@@ -347,15 +365,15 @@ void loop() {
       }
     }
 
-    if (z >= -2200) {
-      doorState = String("Door open");
-      Serial.println(doorState);
+    if (z >= -600) { //-2200 for smörjis door
+      lockState = String("Door open");
+      Serial.println(lockState);
       display.drawBitmap(0, 0, epd_bitmap_lock_open, 128, 64, WHITE);
       display.display(); 
     }
     else {
-      doorState = String("Door closed");
-      Serial.println(doorState);
+      lockState = String("Door closed");
+      Serial.println(lockState);
       display.drawBitmap(0, 0, epd_bitmap_lock_closed, 128, 64, WHITE);
       display.display(); 
     }
